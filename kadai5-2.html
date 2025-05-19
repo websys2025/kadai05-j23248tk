@@ -1,22 +1,52 @@
 <html lang="ja">
 <head>
     <meta charset="utf-8">
-    <title>演習課題5-2：外部APIの呼び出しテスト</title>
+    <title>演習課題5-2：ポケモンAPIで検索！</title>
 </head>
 <body>
-    <h1 id="msg">何かのAPI</h1>
+    <h1 id="msg">ポケモン情報を調べよう！</h1>
     <form name="apiform"><p>
-        何かのフォーム：<input type="text" name="form_data">
-        <button type="button" id="btn1" onclick="some_api(this.form)">実行</button>
+        ポケモン名（英語）：<input type="text" name="form_data" placeholder="例: pikachu">
+        <button type="button" id="btn1" onclick="some_api(this.form)">検索</button>
     </p></form>
-    
-    <div id="result"></div>
+
+    <div id="result" style="margin-top: 20px;"></div>
+
     <script>
         async function some_api(myForm) {
             // ここにコードを書く
-            document.getElementById("result").innerHTML += myForm.form_data.value+"<br />";
+            const name = myForm.form_data.value.trim().toLowerCase();
+            const result = document.getElementById("result");
+            if (!name) {
+                result.innerHTML = "ポケモンの名前を入力してください。";
+                return;
+            }
+
+            const url = `https://pokeapi.co/api/v2/pokemon/${name}`;
+
+            try {
+                const res = await fetch(url);
+                if (!res.ok) {
+                    throw new Error("ポケモンが見つかりません。");
+                }
+                const data = await res.json();
+
+                const types = data.types.map(t => t.type.name).join(", ");
+                const image = data.sprites.front_default;
+
+                result.innerHTML = `
+                    <h2>${data.name.charAt(0).toUpperCase() + data.name.slice(1)}</h2>
+                    <img src="${image}" alt="${data.name}" />
+                    <p><strong>タイプ：</strong>${types}</p>
+                `;
+            } catch (err) {
+                result.innerHTML = `エラー：${err.message}`;
+                console.error(err);
+            }
+
             document.apiform.reset();
         }
     </script>
 </body>
 </html>
+
